@@ -1,0 +1,32 @@
+name: Daily Email Sender
+
+on:
+  schedule:
+    - cron: '0 6 * * *'  # runs every day at 6 AM UTC
+  workflow_dispatch:       # allows manual trigger from GitHub UI
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install composio-core gspread requests
+
+      - name: Run email script
+        env:
+          COMPOSIO_API_KEY: ${{ secrets.COMPOSIO_API_KEY }}
+          SHEET_ID: ${{ secrets.SHEET_ID }}
+        run: python send_emails.py
+      
+      - name: Save progress
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Update progress tracker"
+          file_pattern: progress.json
